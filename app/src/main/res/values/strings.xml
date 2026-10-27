@@ -2,19 +2,63 @@
 <resources>
     <string name="app_name">Video to MP3</string>
     <string name="subtitle">Extract audio from video — fully offline, no server</string>
-    <string name="pick_video">Select video</string>
+
+    <!-- bottom nav -->
+    <string name="nav_convert">Convert</string>
+    <string name="nav_queue">Queue</string>
+    <string name="nav_library">Library</string>
+
+    <!-- convert screen -->
+    <string name="pick_video">Select video(s)</string>
     <string name="no_file">No video selected yet</string>
     <string name="selected">Selected: %1$s</string>
-    <string name="quality_label">Output quality:</string>
-    <string name="convert">Convert to MP3</string>
-    <string name="converting">Converting…</string>
-    <string name="done">Done ✓  (size: %1$s)</string>
-    <string name="failed">Conversion failed. The video may have no audio track.</string>
-    <string name="cancelled">Cancelled</string>
+    <string name="format_label">Output format</string>
+    <string name="quality_label">Quality / bitrate</string>
+    <string name="samplerate_label">Sample rate</string>
+    <string name="channels_label">Channels</string>
+    <string name="keep_source">Keep source</string>
+    <string name="mono">Mono</string>
+    <string name="stereo">Stereo</string>
+    <string name="trim_label">Trim range</string>
+    <string name="trim_start">Start (mm:ss)</string>
+    <string name="trim_end">End (mm:ss)</string>
+    <string name="gain_label">Volume</string>
+    <string name="fade_in">Fade in (ms)</string>
+    <string name="fade_out">Fade out (ms)</string>
+    <string name="tags_label">Tags &amp; cover (MP3)</string>
+    <string name="tag_title">Title</string>
+    <string name="tag_artist">Artist</string>
+    <string name="tag_album">Album</string>
+    <string name="tag_genre">Genre</string>
+    <string name="pick_cover">Choose cover image</string>
+    <string name="advanced">Advanced options</string>
+    <string name="convert">Convert</string>
+    <string name="add_to_queue">Add to queue</string>
+    <string name="enqueued">Added to the queue</string>
+
+    <!-- queue screen -->
+    <string name="queue_empty">The queue is empty</string>
+    <string name="clear_finished">Clear finished</string>
+    <string name="cancel">Cancel</string>
+    <string name="state_queued">Queued</string>
+    <string name="state_running">Converting…</string>
+    <string name="state_done">Done</string>
+    <string name="state_failed">Failed</string>
+    <string name="state_cancelled">Cancelled</string>
+
+    <!-- library screen -->
+    <string name="library_empty">No converted files yet</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
     <string name="share">Share</string>
     <string name="save_music">Save to Music</string>
+    <string name="delete">Delete</string>
     <string name="saved_music">Saved to the Music folder</string>
     <string name="save_failed">Save failed</string>
-    <string name="need_permission">Permission is required to save</string>
+    <string name="deleted">Deleted</string>
+
+    <!-- misc -->
+    <string name="need_permission">Permission is required</string>
     <string name="err_open">Error opening file</string>
+    <string name="done_fmt">Done ✓  (%1$s)</string>
 </resources>
