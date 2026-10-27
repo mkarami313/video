@@ -14,7 +14,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.MediaController;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -27,7 +29,8 @@ import com.appoup.videotomp3.core.ConversionManager;
 import com.appoup.videotomp3.core.ConversionService;
 import com.appoup.videotomp3.model.ConversionOptions;
 import com.appoup.videotomp3.model.OutputFormat;
-import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 import com.google.android.material.snackbar.Snackbar;
@@ -41,15 +44,16 @@ import java.util.List;
 public class ConvertFragment extends Fragment {
 
     private final List<Uri> sources = new ArrayList<>();
-    private String singleName = "audio";
     private byte[] coverBytes;
     private String coverMime;
 
     private TextView txtFile, txtGain;
-    private View advancedBox, bitrateBox;
+    private View advancedBox, bitrateBox, emptyState, previewCard;
+    private VideoView videoPreview;
     private ImageView imgCover;
-    private ChipGroup chipFormat, chipBitrate, chipChannels, chipRate;
+    private MaterialButtonToggleGroup toggleFormat, toggleBitrate, toggleChannels, toggleRate;
     private Slider sliderGain;
+    private MaterialButton btnConvert, btnAddQueue;
     private TextInputEditText editTrimStart, editTrimEnd, editFadeIn, editFadeOut,
             editTitle, editArtist, editAlbum;
 
@@ -90,11 +94,14 @@ public class ConvertFragment extends Fragment {
         txtGain = v.findViewById(R.id.txtGain);
         advancedBox = v.findViewById(R.id.advancedBox);
         bitrateBox = v.findViewById(R.id.bitrateBox);
+        emptyState = v.findViewById(R.id.emptyState);
+        previewCard = v.findViewById(R.id.previewCard);
+        videoPreview = v.findViewById(R.id.videoPreview);
         imgCover = v.findViewById(R.id.imgCover);
-        chipFormat = v.findViewById(R.id.chipFormat);
-        chipBitrate = v.findViewById(R.id.chipBitrate);
-        chipChannels = v.findViewById(R.id.chipChannels);
-        chipRate = v.findViewById(R.id.chipRate);
+        toggleFormat = v.findViewById(R.id.toggleFormat);
+        toggleBitrate = v.findViewById(R.id.toggleBitrate);
+        toggleChannels = v.findViewById(R.id.toggleChannels);
+        toggleRate = v.findViewById(R.id.toggleRate);
         sliderGain = v.findViewById(R.id.sliderGain);
         editTrimStart = v.findViewById(R.id.editTrimStart);
         editTrimEnd = v.findViewById(R.id.editTrimEnd);
@@ -103,11 +110,8 @@ public class ConvertFragment extends Fragment {
         editTitle = v.findViewById(R.id.editTitle);
         editArtist = v.findViewById(R.id.editArtist);
         editAlbum = v.findViewById(R.id.editAlbum);
-
-        View btnConvert = v.findViewById(R.id.btnConvert);
-        View btnAddQueue = v.findViewById(R.id.btnAddQueue);
-        btnConvert.setEnabled(false);
-        btnAddQueue.setEnabled(false);
+        btnConvert = v.findViewById(R.id.btnConvert);
+        btnAddQueue = v.findViewById(R.id.btnAddQueue);
 
         v.findViewById(R.id.btnPick).setOnClickListener(x -> pickVideo());
         v.findViewById(R.id.btnCover).setOnClickListener(x -> pickCoverImage());
@@ -117,8 +121,9 @@ public class ConvertFragment extends Fragment {
         ((MaterialSwitch) v.findViewById(R.id.switchAdvanced)).setOnCheckedChangeListener(
                 (b, checked) -> advancedBox.setVisibility(checked ? View.VISIBLE : View.GONE));
 
-        chipFormat.setOnCheckedStateChangeListener((group, ids) -> {
-            boolean wav = chipFormat.getCheckedChipId() == R.id.fmtWav;
+        toggleFormat.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (!isChecked) return;
+            boolean wav = toggleFormat.getCheckedButtonId() == R.id.fmtWav;
             bitrateBox.setVisibility(wav ? View.GONE : View.VISIBLE);
         });
 
@@ -143,15 +148,40 @@ public class ConvertFragment extends Fragment {
 
     private void onSourcesPicked() {
         boolean has = !sources.isEmpty();
-        requireView().findViewById(R.id.btnConvert).setEnabled(has);
-        requireView().findViewById(R.id.btnAddQueue).setEnabled(has);
+        btnConvert.setEnabled(has);
+        btnAddQueue.setEnabled(has);
+        emptyState.setVisibility(has ? View.GONE : View.VISIBLE);
+        txtFile.setVisibility(has ? View.VISIBLE : View.GONE);
+        previewCard.setVisibility(has ? View.VISIBLE : View.GONE);
+
+        if (!has) {
+            stopPreview();
+            return;
+        }
         if (sources.size() == 1) {
-            singleName = queryName(sources.get(0));
-            txtFile.setText(getString(R.string.selected, singleName));
-        } else if (has) {
-            txtFile.setText(sources.size() + " videos selected");
+            txtFile.setText(getString(R.string.selected, queryName(sources.get(0))));
         } else {
-            txtFile.setText(getString(R.string.no_file));
+            txtFile.setText(sources.size() + " videos selected — previewing first");
+        }
+        setupPreview(sources.get(0));
+    }
+
+    private void setupPreview(Uri uri) {
+        try {
+            MediaController mc = new MediaController(requireContext());
+            mc.setAnchorView(videoPreview);
+            videoPreview.setMediaController(mc);
+            videoPreview.setVideoURI(uri);
+            videoPreview.setOnPreparedListener(mp -> videoPreview.seekTo(1));
+            videoPreview.requestFocus();
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void stopPreview() {
+        try {
+            if (videoPreview.isPlaying()) videoPreview.stopPlayback();
+        } catch (Exception ignored) {
         }
     }
 
@@ -215,14 +245,14 @@ public class ConvertFragment extends Fragment {
     }
 
     private OutputFormat selectedFormat() {
-        int id = chipFormat.getCheckedChipId();
+        int id = toggleFormat.getCheckedButtonId();
         if (id == R.id.fmtM4a) return OutputFormat.M4A;
         if (id == R.id.fmtWav) return OutputFormat.WAV;
         return OutputFormat.MP3;
     }
 
     private int selectedBitrate() {
-        int id = chipBitrate.getCheckedChipId();
+        int id = toggleBitrate.getCheckedButtonId();
         if (id == R.id.br128) return 128;
         if (id == R.id.br256) return 256;
         if (id == R.id.br320) return 320;
@@ -230,14 +260,14 @@ public class ConvertFragment extends Fragment {
     }
 
     private int selectedChannels() {
-        int id = chipChannels.getCheckedChipId();
+        int id = toggleChannels.getCheckedButtonId();
         if (id == R.id.chMono) return 1;
         if (id == R.id.chStereo) return 2;
         return 0;
     }
 
     private int selectedRate() {
-        int id = chipRate.getCheckedChipId();
+        int id = toggleRate.getCheckedButtonId();
         if (id == R.id.rate44) return 44100;
         if (id == R.id.rate22) return 22050;
         if (id == R.id.rate16) return 16000;
@@ -269,6 +299,12 @@ public class ConvertFragment extends Fragment {
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopPreview();
     }
 
     private static String stripExt(String n) {

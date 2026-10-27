@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:clipToPadding="false">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -11,171 +12,262 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnPick"
+        <!-- SOURCE / PREVIEW CARD -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/AppCard"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:icon="@drawable/ic_library"
-            android:text="@string/pick_video" />
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/txtFile"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingVertical="10dp"
-            android:text="@string/no_file" />
-
-        <!-- Format -->
-        <TextView style="@style/SectionLabel" android:text="@string/format_label" />
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipFormat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:singleSelection="true"
-            app:selectionRequired="true">
-            <com.google.android.material.chip.Chip android:id="@+id/fmtMp3" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true" android:text="MP3" />
-            <com.google.android.material.chip.Chip android:id="@+id/fmtM4a" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="M4A (AAC)" />
-            <com.google.android.material.chip.Chip android:id="@+id/fmtWav" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="WAV" />
-        </com.google.android.material.chip.ChipGroup>
-
-        <!-- Bitrate -->
-        <LinearLayout android:id="@+id/bitrateBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-            <TextView style="@style/SectionLabel" android:text="@string/quality_label" />
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipBitrate"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:singleSelection="true"
-                app:selectionRequired="true">
-                <com.google.android.material.chip.Chip android:id="@+id/br128" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="128k" />
-                <com.google.android.material.chip.Chip android:id="@+id/br192" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true" android:text="192k" />
-                <com.google.android.material.chip.Chip android:id="@+id/br256" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="256k" />
-                <com.google.android.material.chip.Chip android:id="@+id/br320" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="320k" />
-            </com.google.android.material.chip.ChipGroup>
-        </LinearLayout>
+                android:orientation="vertical">
 
-        <!-- Channels -->
-        <TextView style="@style/SectionLabel" android:text="@string/channels_label" />
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipChannels"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:singleSelection="true"
-            app:selectionRequired="true">
-            <com.google.android.material.chip.Chip android:id="@+id/chKeep" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true" android:text="@string/keep_source" />
-            <com.google.android.material.chip.Chip android:id="@+id/chMono" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mono" />
-            <com.google.android.material.chip.Chip android:id="@+id/chStereo" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/stereo" />
-        </com.google.android.material.chip.ChipGroup>
-
-        <!-- Advanced (trim / sample rate / gain / fade / tags) -->
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchAdvanced"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/advanced" />
-
-        <LinearLayout
-            android:id="@+id/advancedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <!-- Sample rate -->
-            <TextView style="@style/SectionLabel" android:text="@string/samplerate_label" />
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipRate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:singleSelection="true"
-                app:selectionRequired="true">
-                <com.google.android.material.chip.Chip android:id="@+id/rateKeep" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true" android:text="@string/keep_source" />
-                <com.google.android.material.chip.Chip android:id="@+id/rate44" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="44.1k" />
-                <com.google.android.material.chip.Chip android:id="@+id/rate22" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="22.05k" />
-                <com.google.android.material.chip.Chip android:id="@+id/rate16" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16k" />
-            </com.google.android.material.chip.ChipGroup>
-
-            <!-- Trim -->
-            <TextView style="@style/SectionLabel" android:text="@string/trim_label" />
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-                <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginEnd="6dp" android:hint="@string/trim_start" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
-                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/editTrimStart" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
-                </com.google.android.material.textfield.TextInputLayout>
-                <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:hint="@string/trim_end" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
-                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/editTrimEnd" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
-                </com.google.android.material.textfield.TextInputLayout>
-            </LinearLayout>
-
-            <!-- Gain -->
-            <TextView style="@style/SectionLabel" android:text="@string/gain_label" />
-            <com.google.android.material.slider.Slider
-                android:id="@+id/sliderGain"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:valueFrom="0.2"
-                android:valueTo="3.0"
-                android:stepSize="0.1"
-                android:value="1.0" />
-            <TextView android:id="@+id/txtGain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="1.0×" />
-
-            <!-- Fade -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="8dp">
-                <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginEnd="6dp" android:hint="@string/fade_in" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
-                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/editFadeIn" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number" />
-                </com.google.android.material.textfield.TextInputLayout>
-                <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:hint="@string/fade_out" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
-                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/editFadeOut" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number" />
-                </com.google.android.material.textfield.TextInputLayout>
-            </LinearLayout>
-
-            <!-- Tags -->
-            <TextView style="@style/SectionLabel" android:text="@string/tags_label" />
-            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/tag_title" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
-                <com.google.android.material.textfield.TextInputEditText android:id="@+id/editTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
-            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:hint="@string/tag_artist" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
-                <com.google.android.material.textfield.TextInputEditText android:id="@+id/editArtist" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
-            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:hint="@string/tag_album" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
-                <com.google.android.material.textfield.TextInputEditText android:id="@+id/editAlbum" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnCover"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
+                <!-- Empty state -->
+                <LinearLayout
+                    android:id="@+id/emptyState"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/pick_cover" />
-                <ImageView
-                    android:id="@+id/imgCover"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginStart="12dp"
-                    android:scaleType="centerCrop"
-                    android:visibility="gone" />
-            </LinearLayout>
-        </LinearLayout>
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingVertical="18dp">
+                    <ImageView
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:src="@drawable/ic_convert"
+                        app:tint="?attr/colorPrimary" />
+                    <TextView
+                        style="@style/CardTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/pick_video" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/subtitle"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="13sp"
+                        android:gravity="center" />
+                </LinearLayout>
 
-        <View android:layout_width="match_parent" android:layout_height="16dp" />
+                <!-- Video preview -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/previewCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#000000"
+                    android:visibility="gone">
+                    <VideoView
+                        android:id="@+id/videoPreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:id="@+id/txtFile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPick"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:icon="@drawable/ic_library"
+                    app:iconGravity="textStart"
+                    android:text="@string/pick_video" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- OUTPUT CARD -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/AppCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView style="@style/SectionLabel" android:text="@string/format_label" android:layout_marginTop="0dp" />
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/toggleFormat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true"
+                    app:selectionRequired="true"
+                    app:checkedButton="@id/fmtMp3">
+                    <com.google.android.material.button.MaterialButton android:id="@+id/fmtMp3" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="MP3" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/fmtM4a" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="M4A" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/fmtWav" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="WAV" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <LinearLayout android:id="@+id/bitrateBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                    <TextView style="@style/SectionLabel" android:text="@string/quality_label" />
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/toggleBitrate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:selectionRequired="true"
+                        app:checkedButton="@id/br192">
+                        <com.google.android.material.button.MaterialButton android:id="@+id/br128" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="128" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/br192" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="192" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/br256" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="256" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/br320" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="320" />
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+                </LinearLayout>
+
+                <TextView style="@style/SectionLabel" android:text="@string/channels_label" />
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/toggleChannels"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true"
+                    app:selectionRequired="true"
+                    app:checkedButton="@id/chKeep">
+                    <com.google.android.material.button.MaterialButton android:id="@+id/chKeep" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="@string/keep_source" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/chMono" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="@string/mono" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/chStereo" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="@string/stereo" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ADVANCED CARD -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/AppCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchAdvanced"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/advanced"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/advancedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView style="@style/SectionLabel" android:text="@string/samplerate_label" />
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/toggleRate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:selectionRequired="true"
+                        app:checkedButton="@id/rateKeep">
+                        <com.google.android.material.button.MaterialButton android:id="@+id/rateKeep" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1.4" android:layout_height="wrap_content" android:text="@string/keep_source" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/rate44" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="44k" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/rate22" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="22k" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/rate16" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="16k" />
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                    <TextView style="@style/SectionLabel" android:text="@string/trim_label" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                        <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginEnd="6dp" android:hint="@string/trim_start" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                            <com.google.android.material.textfield.TextInputEditText android:id="@+id/editTrimStart" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:hint="@string/trim_end" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                            <com.google.android.material.textfield.TextInputEditText android:id="@+id/editTrimEnd" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="4dp">
+                        <TextView style="@style/SectionLabel" android:layout_width="0dp" android:layout_weight="1" android:text="@string/gain_label" />
+                        <TextView android:id="@+id/txtGain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="1.0×" android:textColor="?attr/colorPrimary" android:textStyle="bold" />
+                    </LinearLayout>
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderGain"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:valueFrom="0.2"
+                        android:valueTo="3.0"
+                        android:stepSize="0.1"
+                        android:value="1.0" />
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="8dp">
+                        <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginEnd="6dp" android:hint="@string/fade_in" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                            <com.google.android.material.textfield.TextInputEditText android:id="@+id/editFadeIn" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:hint="@string/fade_out" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                            <com.google.android.material.textfield.TextInputEditText android:id="@+id/editFadeOut" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+
+                    <TextView style="@style/SectionLabel" android:text="@string/tags_label" />
+                    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/tag_title" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/editTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:hint="@string/tag_artist" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/editArtist" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:hint="@string/tag_album" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/editAlbum" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="10dp">
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnCover"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAllCaps="false"
+                            android:text="@string/pick_cover" />
+                        <ImageView
+                            android:id="@+id/imgCover"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_marginStart="12dp"
+                            android:scaleType="centerCrop"
+                            android:visibility="gone" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnConvert"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
             android:enabled="false"
             app:icon="@drawable/ic_convert"
+            app:iconGravity="textStart"
             android:text="@string/convert" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAddQueue"
-            style="@style/Widget.Material3.Button.TonalButton"
+            style="@style/AppButton.Tonal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:enabled="false"
             app:icon="@drawable/ic_queue"
+            app:iconGravity="textStart"
             android:text="@string/add_to_queue" />
 
     </LinearLayout>
