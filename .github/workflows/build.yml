@@ -34,8 +34,8 @@ jobs:
           tail -n 150 build.log
           echo "::endgroup::"
           if [ $code -ne 0 ]; then
-            grep -nE "Could not|Caused by:|error:|FAILURE:|What went wrong|Could not resolve|No matching|> Task|^> " build.log \
-              | grep -viE "warning|deprecat" | tail -n 20 \
+            grep -nE "Duplicate class|is defined in multiple|found in modules|Could not|Caused by:|error:|FAILURE:|What went wrong|Could not resolve|No matching" build.log \
+              | grep -viE "warning|deprecat" | tail -n 25 \
               | while IFS= read -r line; do echo "::error::${line}"; done
           fi
           exit $code
