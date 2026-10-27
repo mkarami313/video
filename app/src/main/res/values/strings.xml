@@ -57,6 +57,14 @@
     <string name="save_failed">Save failed</string>
     <string name="deleted">Deleted</string>
 
+    <!-- settings -->
+    <string name="settings">Settings</string>
+    <string name="default_format">Default format</string>
+    <string name="default_quality">Default quality</string>
+    <string name="auto_save">Auto-save to Music</string>
+    <string name="auto_save_desc">Copy every finished file into the Music folder automatically</string>
+    <string name="trim_hint">Drag the handles to trim</string>
+
     <!-- misc -->
     <string name="need_permission">Permission is required</string>
     <string name="err_open">Error opening file</string>

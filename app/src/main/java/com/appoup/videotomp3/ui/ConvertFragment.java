@@ -11,12 +11,11 @@ import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.MediaController;
 import android.widget.TextView;
-import android.widget.VideoView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -27,10 +26,14 @@ import androidx.fragment.app.Fragment;
 import com.appoup.videotomp3.R;
 import com.appoup.videotomp3.core.ConversionManager;
 import com.appoup.videotomp3.core.ConversionService;
+import com.appoup.videotomp3.core.Prefs;
+import com.appoup.videotomp3.engine.WaveformExtractor;
 import com.appoup.videotomp3.model.ConversionOptions;
 import com.appoup.videotomp3.model.OutputFormat;
+import com.appoup.videotomp3.view.WaveformView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 import com.google.android.material.snackbar.Snackbar;
@@ -40,17 +43,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ConvertFragment extends Fragment {
 
     private final List<Uri> sources = new ArrayList<>();
     private byte[] coverBytes;
     private String coverMime;
+    private long waveDurationMs = 0;
 
     private TextView txtFile, txtGain;
     private View advancedBox, bitrateBox, emptyState, previewCard;
-    private VideoView videoPreview;
-    private ImageView imgCover;
+    private TextureView videoTexture;
+    private ImageView btnPreviewPlay, imgCover;
+    private VideoPreview preview;
+    private WaveformView waveform;
     private MaterialButtonToggleGroup toggleFormat, toggleBitrate, toggleChannels, toggleRate;
     private Slider sliderGain;
     private MaterialButton btnConvert, btnAddQueue;
@@ -96,8 +103,10 @@ public class ConvertFragment extends Fragment {
         bitrateBox = v.findViewById(R.id.bitrateBox);
         emptyState = v.findViewById(R.id.emptyState);
         previewCard = v.findViewById(R.id.previewCard);
-        videoPreview = v.findViewById(R.id.videoPreview);
+        videoTexture = v.findViewById(R.id.videoTexture);
+        btnPreviewPlay = v.findViewById(R.id.btnPreviewPlay);
         imgCover = v.findViewById(R.id.imgCover);
+        waveform = v.findViewById(R.id.waveform);
         toggleFormat = v.findViewById(R.id.toggleFormat);
         toggleBitrate = v.findViewById(R.id.toggleBitrate);
         toggleChannels = v.findViewById(R.id.toggleChannels);
@@ -112,6 +121,17 @@ public class ConvertFragment extends Fragment {
         editAlbum = v.findViewById(R.id.editAlbum);
         btnConvert = v.findViewById(R.id.btnConvert);
         btnAddQueue = v.findViewById(R.id.btnAddQueue);
+
+        preview = new VideoPreview(requireContext(), videoTexture, btnPreviewPlay);
+
+        int primary = MaterialColors.getColor(waveform,
+                com.google.android.material.R.attr.colorPrimary, 0xFF5B3BD4);
+        waveform.setPrimaryColor(primary);
+        waveform.setListener((start, end) -> {
+            if (waveDurationMs <= 0) return;
+            editTrimStart.setText(formatClock((long) (start * waveDurationMs)));
+            editTrimEnd.setText(formatClock((long) (end * waveDurationMs)));
+        });
 
         v.findViewById(R.id.btnPick).setOnClickListener(x -> pickVideo());
         v.findViewById(R.id.btnCover).setOnClickListener(x -> pickCoverImage());
@@ -128,7 +148,30 @@ public class ConvertFragment extends Fragment {
         });
 
         sliderGain.addOnChangeListener((slider, value, fromUser) ->
-                txtGain.setText(String.format(java.util.Locale.US, "%.1f×", value)));
+                txtGain.setText(String.format(Locale.US, "%.1f×", value)));
+
+        applyDefaults();
+    }
+
+    private void applyDefaults() {
+        Prefs prefs = new Prefs(requireContext());
+        switch (prefs.defaultFormat().toUpperCase(Locale.US)) {
+            case "M4A": toggleFormat.check(R.id.fmtM4a); break;
+            case "WAV": toggleFormat.check(R.id.fmtWav); break;
+            default: toggleFormat.check(R.id.fmtMp3);
+        }
+        switch (prefs.defaultBitrate()) {
+            case 128: toggleBitrate.check(R.id.br128); break;
+            case 256: toggleBitrate.check(R.id.br256); break;
+            case 320: toggleBitrate.check(R.id.br320); break;
+            default: toggleBitrate.check(R.id.br192);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        applyDefaults();  // reflect any change made in Settings
     }
 
     private void pickVideo() {
@@ -155,34 +198,34 @@ public class ConvertFragment extends Fragment {
         previewCard.setVisibility(has ? View.VISIBLE : View.GONE);
 
         if (!has) {
-            stopPreview();
+            if (preview != null) preview.release();
             return;
         }
+        Uri first = sources.get(0);
         if (sources.size() == 1) {
-            txtFile.setText(getString(R.string.selected, queryName(sources.get(0))));
+            txtFile.setText(getString(R.string.selected, queryName(first)));
         } else {
             txtFile.setText(sources.size() + " videos selected — previewing first");
         }
-        setupPreview(sources.get(0));
+        preview.setSource(first);
+
+        waveDurationMs = probeDuration(first);
+        waveform.setAmplitudes(null);
+        waveform.setSelection(0f, 1f);
+        extractWaveform(first);
     }
 
-    private void setupPreview(Uri uri) {
-        try {
-            MediaController mc = new MediaController(requireContext());
-            mc.setAnchorView(videoPreview);
-            videoPreview.setMediaController(mc);
-            videoPreview.setVideoURI(uri);
-            videoPreview.setOnPreparedListener(mp -> videoPreview.seekTo(1));
-            videoPreview.requestFocus();
-        } catch (Exception ignored) {
-        }
-    }
-
-    private void stopPreview() {
-        try {
-            if (videoPreview.isPlaying()) videoPreview.stopPlayback();
-        } catch (Exception ignored) {
-        }
+    private void extractWaveform(Uri uri) {
+        new Thread(() -> {
+            try {
+                final float[] amps = WaveformExtractor.extract(requireContext(), uri, 160);
+                Activity act = getActivity();
+                if (act != null && isAdded()) {
+                    act.runOnUiThread(() -> { if (isAdded()) waveform.setAmplitudes(amps); });
+                }
+            } catch (Exception ignored) {
+            }
+        }).start();
     }
 
     private void loadCover(Uri uri) {
@@ -304,7 +347,18 @@ public class ConvertFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        stopPreview();
+        if (preview != null) preview.pause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (preview != null) preview.release();
+    }
+
+    private static String formatClock(long ms) {
+        long s = ms / 1000;
+        return String.format(Locale.US, "%d:%02d", s / 60, s % 60);
     }
 
     private static String stripExt(String n) {

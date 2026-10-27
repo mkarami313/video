@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/settingsRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/colorBackground"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?android:attr/colorBackground"
+            app:navigationIcon="@drawable/ic_back"
+            app:title="@string/settings"
+            app:titleTextColor="?attr/colorOnSurface" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/AppCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView style="@style/SectionLabel" android:text="@string/default_format" android:layout_marginTop="0dp" />
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/toggleFormat"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+                        <com.google.android.material.button.MaterialButton android:id="@+id/fmtMp3" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="MP3" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/fmtM4a" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="M4A" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/fmtWav" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="WAV" />
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                    <TextView style="@style/SectionLabel" android:text="@string/default_quality" />
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/toggleBitrate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+                        <com.google.android.material.button.MaterialButton android:id="@+id/br128" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="128" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/br192" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="192" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/br256" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="256" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/br320" style="@style/SegButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="320" />
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/AppCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <TextView style="@style/CardTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/auto_save" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/auto_save_desc" android:textColor="?attr/colorOnSurfaceVariant" android:textSize="13sp" android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchAutoSave"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -16,9 +16,13 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
+import android.content.Intent;
+
 import com.appoup.videotomp3.ui.ConvertFragment;
 import com.appoup.videotomp3.ui.LibraryFragment;
 import com.appoup.videotomp3.ui.QueueFragment;
+import com.appoup.videotomp3.ui.SettingsActivity;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -63,12 +67,24 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.inflateMenu(R.menu.toolbar_menu);
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_settings) {
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            }
+            return false;
+        });
+
         requestNotificationPermission();
     }
 
     private boolean show(Fragment f) {
         if (f == active) return true;
-        getSupportFragmentManager().beginTransaction().hide(active).show(f).commit();
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.fragment_fade_in, R.anim.fragment_fade_out)
+                .hide(active).show(f).commit();
         active = f;
         return true;
     }

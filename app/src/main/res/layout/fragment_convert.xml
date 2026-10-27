@@ -57,15 +57,28 @@
                     android:id="@+id/previewCard"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
-                    app:cardCornerRadius="14dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
                     app:cardBackgroundColor="#000000"
                     android:visibility="gone">
-                    <VideoView
-                        android:id="@+id/videoPreview"
+
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center" />
+                        android:layout_height="match_parent">
+                        <TextureView
+                            android:id="@+id/videoTexture"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                        <ImageView
+                            android:id="@+id/btnPreviewPlay"
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/circle_scrim"
+                            android:padding="12dp"
+                            android:src="@drawable/ic_play"
+                            app:tint="#FFFFFFFF" />
+                    </FrameLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <TextView
@@ -187,6 +200,18 @@
                     </com.google.android.material.button.MaterialButtonToggleGroup>
 
                     <TextView style="@style/SectionLabel" android:text="@string/trim_label" />
+                    <com.appoup.videotomp3.view.WaveformView
+                        android:id="@+id/waveform"
+                        android:layout_width="match_parent"
+                        android:layout_height="84dp"
+                        android:layout_marginBottom="6dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/trim_hint"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="8dp" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
                         <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginEnd="6dp" android:hint="@string/trim_start" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
                             <com.google.android.material.textfield.TextInputEditText android:id="@+id/editTrimStart" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
