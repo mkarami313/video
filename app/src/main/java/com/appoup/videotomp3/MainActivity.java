@@ -5,10 +5,15 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 
+import android.view.View;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.appoup.videotomp3.ui.ConvertFragment;
@@ -37,6 +42,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         BottomNavigationView nav = findViewById(R.id.bottomNav);
+
+        // targetSdk 35 draws edge-to-edge: push the bar below the status bar and
+        // the bottom navigation above the gesture/navigation bar.
+        final View appBar = findViewById(R.id.appBar);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rootMain), (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            appBar.setPadding(appBar.getPaddingLeft(), bars.top,
+                    appBar.getPaddingRight(), appBar.getPaddingBottom());
+            nav.setPadding(nav.getPaddingLeft(), nav.getPaddingTop(),
+                    nav.getPaddingRight(), bars.bottom);
+            return insets;
+        });
+
         nav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_convert) return show(convertFragment);
