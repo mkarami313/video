@@ -34,5 +34,8 @@ dependencies {
 
     // رمزگذار MP3 بومی (LAME) برای اندروید — کاملاً روی خود گوشی اجرا می‌شود (بدون سرور).
     // decode صدای ویدیو با MediaCodec خود اندروید انجام می‌شود و سپس به MP3 واقعی رمزگذاری می‌شود.
-    implementation 'com.github.naman14:TAndroidLame:1.1'
+    // وابستگی قدیمی support library آن حذف می‌شود تا با AndroidX تداخل کلاس نداشته باشد.
+    implementation('com.github.naman14:TAndroidLame:1.1') {
+        exclude group: 'com.android.support'
+    }
 }
