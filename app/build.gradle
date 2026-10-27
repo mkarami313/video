@@ -1,0 +1,46 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.appoup.videotomp3'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.appoup.videotomp3"
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // ffmpeg-kit ships large native .so files; disabling compression keeps the APK installable.
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.activity:activity:1.9.3'
+
+    // FFmpeg running fully on-device (no server). The "audio" package includes libmp3lame
+    // for true MP3 output. Everything below runs offline on the phone.
+    // If this exact coordinate ever fails to resolve, see README (alternatives listed there).
+    implementation 'com.arthenica:ffmpeg-kit-audio:6.0-2.LTS'
+}
