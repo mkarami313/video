@@ -1,0 +1,19 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        // Fallback mirror in case a dependency is not reachable from the two above.
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+rootProject.name = "VideoToMp3"
+include ':app'
