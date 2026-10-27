@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ویدیو به MP3</string>
-    <string name="subtitle">جداسازی صدای ویدیو — کاملاً آفلاین، بدون سرور</string>
-    <string name="pick_video">انتخاب ویدیو</string>
-    <string name="no_file">هنوز ویدیویی انتخاب نشده است</string>
-    <string name="selected">فایل انتخاب‌شده: %1$s</string>
-    <string name="quality_label">کیفیت خروجی:</string>
-    <string name="convert">تبدیل به MP3</string>
-    <string name="converting">در حال تبدیل…</string>
-    <string name="done">انجام شد ✓  (حجم: %1$s)</string>
-    <string name="failed">تبدیل ناموفق بود. ممکن است این ویدیو صدا نداشته باشد.</string>
-    <string name="cancelled">عملیات لغو شد</string>
-    <string name="share">اشتراک‌گذاری</string>
-    <string name="save_music">ذخیره در موزیک</string>
-    <string name="saved_music">در پوشهٔ موزیک ذخیره شد</string>
-    <string name="save_failed">ذخیره ناموفق بود</string>
-    <string name="need_permission">برای ذخیره، اجازهٔ دسترسی لازم است</string>
-    <string name="err_open">خطا در باز کردن فایل</string>
+    <string name="app_name">Video to MP3</string>
+    <string name="subtitle">Extract audio from video — fully offline, no server</string>
+    <string name="pick_video">Select video</string>
+    <string name="no_file">No video selected yet</string>
+    <string name="selected">Selected: %1$s</string>
+    <string name="quality_label">Output quality:</string>
+    <string name="convert">Convert to MP3</string>
+    <string name="converting">Converting…</string>
+    <string name="done">Done ✓  (size: %1$s)</string>
+    <string name="failed">Conversion failed. The video may have no audio track.</string>
+    <string name="cancelled">Cancelled</string>
+    <string name="share">Share</string>
+    <string name="save_music">Save to Music</string>
+    <string name="saved_music">Saved to the Music folder</string>
+    <string name="save_failed">Save failed</string>
+    <string name="need_permission">Permission is required to save</string>
+    <string name="err_open">Error opening file</string>
 </resources>

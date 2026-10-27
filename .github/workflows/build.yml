@@ -1,7 +1,7 @@
 name: Build APK
 
-# این workflow به‌صورت خودکار APK را می‌سازد و برای دانلود آپلود می‌کند.
-# با هر push یا به‌صورت دستی (دکمهٔ Run workflow) اجرا می‌شود.
+# Builds a signed release APK automatically and uploads it for download.
+# Runs on every push or manually (Run workflow button).
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    # نسخهٔ پایدار؛ Android SDK روی این ایمیج از پیش نصب است.
+    # Stable image; the Android SDK is preinstalled here.
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -25,10 +25,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Build debug APK
+      - name: Build release APK
         run: |
           set +e
-          ./gradlew assembleDebug --no-daemon --stacktrace > build.log 2>&1
+          ./gradlew assembleRelease --no-daemon --stacktrace > build.log 2>&1
           code=$?
           echo "::group::Gradle output (tail)"
           tail -n 150 build.log
@@ -40,9 +40,9 @@ jobs:
           fi
           exit $code
 
-      - name: Upload APK
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: VideoToMp3-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: VideoToMp3-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error

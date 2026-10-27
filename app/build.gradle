@@ -12,10 +12,23 @@ android {
         targetSdk 35
         versionCode 1
         versionName "1.0"
+        resConfigs "en"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('release.jks')
+            storePassword 'videotomp3'
+            keyAlias 'videotomp3'
+            keyPassword 'videotomp3'
+        }
     }
 
     buildTypes {
         release {
+            signingConfig signingConfigs.release
+            // امضاشده و آمادهٔ انتشار. بهینه‌سازی R8 خاموش است تا رفتار اجرا کاملاً قابل‌اتکا بماند؛
+            // در صورت تمایل می‌توان minifyEnabled/shrinkResources را true کرد.
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -32,9 +45,9 @@ dependencies {
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.activity:activity:1.9.3'
 
-    // رمزگذار MP3 بومی (LAME) برای اندروید — کاملاً روی خود گوشی اجرا می‌شود (بدون سرور).
-    // decode صدای ویدیو با MediaCodec خود اندروید انجام می‌شود و سپس به MP3 واقعی رمزگذاری می‌شود.
-    // وابستگی قدیمی support library آن حذف می‌شود تا با AndroidX تداخل کلاس نداشته باشد.
+    // Native LAME MP3 encoder for Android — runs entirely on the device (no server).
+    // The video's audio is decoded with Android MediaCodec and re-encoded to true MP3.
+    // Its legacy support-library dependency is excluded to avoid AndroidX duplicate classes.
     implementation('com.github.naman14:TAndroidLame:1.1') {
         exclude group: 'com.android.support'
     }
