@@ -5,6 +5,9 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.MediaCodec;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -23,21 +26,23 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
-import com.arthenica.ffmpegkit.FFmpegKit;
-import com.arthenica.ffmpegkit.FFmpegKitConfig;
-import com.arthenica.ffmpegkit.FFmpegSession;
-import com.arthenica.ffmpegkit.ReturnCode;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
+import com.naman14.androidlame.AndroidLame;
+import com.naman14.androidlame.LameBuilder;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 
 /**
  * VideoToMp3 — extracts the audio track of any video into a real MP3 file,
- * entirely on the device. FFmpeg (with libmp3lame) runs locally: no server,
- * no network, no upload.
+ * entirely on the device. The audio is decoded with Android's MediaCodec and
+ * re-encoded to MP3 with the native LAME encoder. No server, no network.
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -48,13 +53,14 @@ public class MainActivity extends AppCompatActivity {
 
     private Uri inputUri;
     private String inputDisplayName;
-    private long totalDurationMs = 0;
+    private long totalDurationUs = 0;
     private File outputFile;
-    private FFmpegSession currentSession;
+    private Thread worker;
+    private volatile boolean cancelRequested = false;
 
     private static final int REQ_WRITE = 42;
+    private static final int TIMEOUT_US = 10000;
 
-    // --- video picker (SAF) ---
     private final androidx.activity.result.ActivityResultLauncher<Intent> pickLauncher =
             registerForActivityResult(
                     new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
@@ -101,13 +107,12 @@ public class MainActivity extends AppCompatActivity {
         resultBar.setVisibility(View.GONE);
         txtStatus.setText("");
 
-        // Read total duration so we can show a real percentage during encoding.
-        totalDurationMs = 0;
+        totalDurationUs = 0;
         try {
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             mmr.setDataSource(this, uri);
             String d = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-            if (d != null) totalDurationMs = Long.parseLong(d);
+            if (d != null) totalDurationUs = Long.parseLong(d) * 1000L;
             mmr.release();
         } catch (Exception ignored) {
         }
@@ -122,70 +127,211 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startConversion() {
-        if (inputUri == null) return;
+        if (inputUri == null || (worker != null && worker.isAlive())) return;
 
-        int bitrate = selectedBitrate();
+        final int bitrate = selectedBitrate();
         String base = stripExtension(inputDisplayName == null ? "audio" : inputDisplayName);
         outputFile = new File(getExternalFilesDir(null), sanitize(base) + ".mp3");
 
-        String inputSaf;
-        try {
-            inputSaf = FFmpegKitConfig.getSafParameterForRead(this, inputUri);
-        } catch (Exception e) {
-            toast(getString(R.string.err_open));
-            return;
-        }
-
-        String[] cmd = new String[]{
-                "-i", inputSaf,
-                "-vn",                       // drop the video stream
-                "-acodec", "libmp3lame",     // true MP3 encoder
-                "-b:a", bitrate + "k",
-                "-id3v2_version", "3",
-                "-y", outputFile.getAbsolutePath()
-        };
-
         setBusy(true);
         txtStatus.setText(getString(R.string.converting));
+        cancelRequested = false;
 
-        currentSession = FFmpegKit.executeWithArgumentsAsync(cmd,
-                session -> runOnUiThread(() -> {
-                    setBusy(false);
-                    if (ReturnCode.isSuccess(session.getReturnCode())
-                            && outputFile.exists() && outputFile.length() > 0) {
-                        progress.setProgress(100);
-                        txtStatus.setText(getString(R.string.done, humanSize(outputFile.length())));
-                        resultBar.setVisibility(View.VISIBLE);
-                    } else if (ReturnCode.isCancel(session.getReturnCode())) {
-                        txtStatus.setText(getString(R.string.cancelled));
-                    } else {
-                        txtStatus.setText(getString(R.string.failed));
+        worker = new Thread(() -> {
+            boolean ok = false;
+            String errMsg = null;
+            try {
+                ok = transcodeToMp3(inputUri, outputFile, bitrate);
+            } catch (Exception e) {
+                errMsg = e.getMessage();
+            }
+            final boolean success = ok && outputFile.exists() && outputFile.length() > 0;
+            runOnUiThread(() -> {
+                setBusy(false);
+                if (cancelRequested) {
+                    txtStatus.setText(getString(R.string.cancelled));
+                } else if (success) {
+                    progress.setIndeterminate(false);
+                    progress.setProgress(100);
+                    txtStatus.setText(getString(R.string.done, humanSize(outputFile.length())));
+                    resultBar.setVisibility(View.VISIBLE);
+                } else {
+                    txtStatus.setText(getString(R.string.failed));
+                }
+            });
+        });
+        worker.start();
+    }
+
+    /**
+     * Decodes the first audio track of {@code uri} with MediaCodec and encodes
+     * the PCM to {@code out} as MP3 using LAME. Returns true on success.
+     */
+    private boolean transcodeToMp3(Uri uri, File out, int bitrate) throws Exception {
+        MediaExtractor extractor = new MediaExtractor();
+        MediaCodec decoder = null;
+        AndroidLame lame = null;
+        OutputStream mp3Stream = null;
+        try {
+            extractor.setDataSource(this, uri, null);
+            int audioTrack = -1;
+            MediaFormat format = null;
+            for (int i = 0; i < extractor.getTrackCount(); i++) {
+                MediaFormat f = extractor.getTrackFormat(i);
+                String mime = f.getString(MediaFormat.KEY_MIME);
+                if (mime != null && mime.startsWith("audio/")) {
+                    audioTrack = i;
+                    format = f;
+                    break;
+                }
+            }
+            if (audioTrack < 0 || format == null) return false; // no audio track
+            extractor.selectTrack(audioTrack);
+
+            int sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE);
+            int channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
+            if (channels < 1) channels = 1;
+            if (channels > 2) channels = 2;
+
+            String mime = format.getString(MediaFormat.KEY_MIME);
+            decoder = MediaCodec.createDecoderByType(mime);
+            decoder.configure(format, null, null, 0);
+            decoder.start();
+
+            lame = new LameBuilder()
+                    .setInSampleRate(sampleRate)
+                    .setOutChannels(channels)
+                    .setOutBitrate(bitrate)
+                    .setOutSampleRate(sampleRate)
+                    .setQuality(5)
+                    .build();
+
+            mp3Stream = new FileOutputStream(out);
+
+            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+            boolean inputDone = false;
+            boolean outputDone = false;
+
+            while (!outputDone) {
+                if (cancelRequested) return false;
+
+                if (!inputDone) {
+                    int inIndex = decoder.dequeueInputBuffer(TIMEOUT_US);
+                    if (inIndex >= 0) {
+                        ByteBuffer inBuf = decoder.getInputBuffer(inIndex);
+                        int sampleSize = (inBuf == null) ? -1 : extractor.readSampleData(inBuf, 0);
+                        if (sampleSize < 0) {
+                            decoder.queueInputBuffer(inIndex, 0, 0, 0,
+                                    MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                            inputDone = true;
+                        } else {
+                            long pts = extractor.getSampleTime();
+                            decoder.queueInputBuffer(inIndex, 0, sampleSize, pts, 0);
+                            extractor.advance();
+                            if (totalDurationUs > 0) {
+                                int pct = (int) (pts * 100 / totalDurationUs);
+                                publishProgress(pct);
+                            }
+                        }
                     }
-                }),
-                log -> { /* logs available via log.getMessage() if needed */ },
-                statistics -> {
-                    if (totalDurationMs > 0) {
-                        int pct = (int) (statistics.getTime() / (double) totalDurationMs * 100.0);
-                        if (pct < 0) pct = 0;
-                        if (pct > 100) pct = 100;
-                        final int p = pct;
-                        runOnUiThread(() -> progress.setProgress(p));
+                }
+
+                int outIndex = decoder.dequeueOutputBuffer(info, TIMEOUT_US);
+                if (outIndex >= 0) {
+                    if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                        outputDone = true;
                     }
-                });
+                    if (info.size > 0) {
+                        ByteBuffer outBuf = decoder.getOutputBuffer(outIndex);
+                        if (outBuf != null) {
+                            outBuf.position(info.offset);
+                            outBuf.limit(info.offset + info.size);
+                            encodePcm(outBuf, channels, lame, mp3Stream);
+                        }
+                    }
+                    decoder.releaseOutputBuffer(outIndex, false);
+                } else if (outIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    MediaFormat newFmt = decoder.getOutputFormat();
+                    // keep sampleRate/channels in sync with the decoder's real output
+                    if (newFmt.containsKey(MediaFormat.KEY_SAMPLE_RATE)
+                            && newFmt.containsKey(MediaFormat.KEY_CHANNEL_COUNT)) {
+                        int ns = newFmt.getInteger(MediaFormat.KEY_SAMPLE_RATE);
+                        int nc = newFmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
+                        if (nc < 1) nc = 1; if (nc > 2) nc = 2;
+                        if (ns != sampleRate || nc != channels) {
+                            sampleRate = ns;
+                            channels = nc;
+                            lame.close();
+                            lame = new LameBuilder()
+                                    .setInSampleRate(sampleRate)
+                                    .setOutChannels(channels)
+                                    .setOutBitrate(bitrate)
+                                    .setOutSampleRate(sampleRate)
+                                    .setQuality(5)
+                                    .build();
+                        }
+                    }
+                }
+            }
+
+            // flush remaining MP3 frames
+            byte[] flushBuf = new byte[8192];
+            int flushed = lame.flush(flushBuf);
+            if (flushed > 0) mp3Stream.write(flushBuf, 0, flushed);
+            mp3Stream.flush();
+            return true;
+        } finally {
+            try { if (mp3Stream != null) mp3Stream.close(); } catch (Exception ignored) {}
+            try { if (lame != null) lame.close(); } catch (Exception ignored) {}
+            try { if (decoder != null) { decoder.stop(); decoder.release(); } } catch (Exception ignored) {}
+            try { extractor.release(); } catch (Exception ignored) {}
+        }
+    }
+
+    private void encodePcm(ByteBuffer pcm, int channels, AndroidLame lame, OutputStream out)
+            throws Exception {
+        ShortBuffer sb = pcm.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
+        int total = sb.remaining();
+        short[] samples = new short[total];
+        sb.get(samples);
+
+        int perChannel = (channels == 2) ? total / 2 : total;
+        byte[] mp3Buf = new byte[(int) (perChannel * 1.25) + 7200];
+        int encoded;
+
+        if (channels == 2) {
+            short[] left = new short[perChannel];
+            short[] right = new short[perChannel];
+            for (int i = 0; i < perChannel; i++) {
+                left[i] = samples[2 * i];
+                right[i] = samples[2 * i + 1];
+            }
+            encoded = lame.encode(left, right, perChannel, mp3Buf);
+        } else {
+            encoded = lame.encode(samples, samples, perChannel, mp3Buf);
+        }
+        if (encoded > 0) out.write(mp3Buf, 0, encoded);
+    }
+
+    private void publishProgress(int pct) {
+        final int p = Math.max(0, Math.min(100, pct));
+        runOnUiThread(() -> {
+            if (progress.isIndeterminate()) progress.setIndeterminate(false);
+            progress.setProgress(p);
+        });
     }
 
     private void setBusy(boolean busy) {
         btnPick.setEnabled(!busy);
         btnConvert.setEnabled(!busy && inputUri != null);
-        progress.setVisibility(busy ? View.VISIBLE : View.VISIBLE);
+        progress.setVisibility(View.VISIBLE);
         if (busy) {
-            progress.setIndeterminate(totalDurationMs <= 0);
+            progress.setIndeterminate(totalDurationUs <= 0);
             progress.setProgress(0);
             resultBar.setVisibility(View.GONE);
         }
     }
 
-    // --- share the produced MP3 ---
     private void shareOutput() {
         if (outputFile == null || !outputFile.exists()) return;
         Uri uri = FileProvider.getUriForFile(
@@ -197,7 +343,6 @@ public class MainActivity extends AppCompatActivity {
         startActivity(Intent.createChooser(share, getString(R.string.share)));
     }
 
-    // --- save the produced MP3 into the public Music library ---
     private void saveToMusic() {
         if (outputFile == null || !outputFile.exists()) return;
 
@@ -231,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!musicDir.exists()) musicDir.mkdirs();
                 File dest = new File(musicDir, outputFile.getName());
                 try (InputStream in = new java.io.FileInputStream(outputFile);
-                     OutputStream out = new java.io.FileOutputStream(dest)) {
+                     OutputStream out = new FileOutputStream(dest)) {
                     copy(in, out);
                 }
                 MediaScannerConnection.scanFile(this,
@@ -258,9 +403,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (isFinishing() && currentSession != null) {
-            FFmpegKit.cancel(currentSession.getSessionId());
-        }
+        if (isFinishing()) cancelRequested = true;
     }
 
     // ---------- helpers ----------
