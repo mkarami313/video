@@ -8,6 +8,9 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     # Stable image; the Android SDK is preinstalled here.
@@ -40,9 +43,23 @@ jobs:
           fi
           exit $code
 
-      - name: Upload release APK
+      - name: Upload release APK (artifact)
         uses: actions/upload-artifact@v4
         with:
           name: VideoToMp3-release-apk
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/release/app-release.apk VideoToMp3.apk
+
+      - name: Publish GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0
+          name: Video to MP3 v1.0
+          body: |
+            Signed release APK — extracts audio from any video to MP3, fully offline (no server).
+            Download **VideoToMp3.apk** below and install it (enable "install from unknown sources").
+          files: VideoToMp3.apk
